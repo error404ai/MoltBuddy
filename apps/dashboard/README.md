@@ -58,7 +58,7 @@ This starts:
 
 - **MySQL** on `localhost:3306`
 - **phpMyAdmin** on `http://localhost:8080`
-- **Backend API** on `http://localhost:3001` (containerized)
+- **Backend API** on `http://localhost:3000` (containerized)
 - **Frontend App** on `http://localhost:5173` (containerized)
 
 ### 4. Alternative: Local Development (without containers)
@@ -71,7 +71,7 @@ pnpm run dev
 
 This starts:
 
-- **Backend API** on `http://localhost:3001`
+- **Backend API** on `http://localhost:3000`
 - **Frontend App** on `http://localhost:5173`
 
 ## 🐳 Docker Commands
@@ -91,7 +91,7 @@ pnpm run docker:build         # Rebuild containers
 | Service    | URL                     | Description         |
 | ---------- | ----------------------- | ------------------- |
 | Frontend   | `http://localhost:5173` | React application   |
-| API        | `http://localhost:3001` | Hono + tRPC server  |
+| API        | `http://localhost:3000` | Hono + tRPC server  |
 | Database   | `localhost:3306`        | MySQL database      |
 | phpMyAdmin | `http://localhost:8080` | Database management |
 

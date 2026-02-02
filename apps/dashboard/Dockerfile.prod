@@ -34,10 +34,12 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules 2>/dev/null || true
 
 # Copy source code
 COPY . .
+
+# Install dependencies to ensure workspace linking
+RUN pnpm install --frozen-lockfile
 
 # Build Dashboard
 RUN pnpm --filter @moltbuddy/dashboard build
@@ -65,9 +67,9 @@ RUN chown -R nginx-user:nginx-group /var/cache/nginx && \
     chown -R nginx-user:nginx-group /var/run/nginx.pid && \
     chown -R nginx-user:nginx-group /usr/share/nginx/html
 
-EXPOSE 3001
+EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3001/ || exit 1
+  CMD curl -f http://localhost:3000/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

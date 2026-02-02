@@ -26,7 +26,7 @@ pnpm format
 pnpm --filter @moltbuddy/api dev
 pnpm --filter @moltbuddy/api build
 
-# Dashboard (Vite on port 3001)
+# Dashboard (Vite on port 3000)
 pnpm --filter @moltbuddy/dashboard dev
 
 # Website (Next.js on port 3000)

@@ -78,7 +78,7 @@ services:
       DB_NAME: ${MYSQL_DATABASE:-moltbuddy_db}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
@@ -109,7 +109,7 @@ services:
       NODE_ENV: development
       VITE_API_URL: http://localhost:${API_PORT:-8000}
     ports:
-      - "${DASHBOARD_PORT:-3001}:3001"
+      - "${DASHBOARD_PORT:-3000}:3000"
     volumes:
       # Mount source code for hot reloading
       - ./apps/dashboard/src:/app/apps/dashboard/src

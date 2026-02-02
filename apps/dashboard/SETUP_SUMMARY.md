@@ -7,7 +7,7 @@
 - **Hono Framework**: Ultra-fast web server running on Node.js
 - **tRPC v11**: Type-safe API layer with full TypeScript integration
 - **Server Location**: `server/` directory
-- **Port**: http://localhost:3001
+- **Port**: http://localhost:3000
 - **API Endpoint**: `/trpc`
 
 ### 2. **Client-side Setup (React + tRPC Client)**
@@ -78,7 +78,7 @@
 #### Start Development:
 
 ```bash
-pnpm dev  # Starts both client (port 5173) and server (port 3001)
+pnpm dev  # Starts both client (port 5173) and server (port 3000)
 ```
 
 #### Example Usage in React:
