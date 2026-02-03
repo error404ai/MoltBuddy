@@ -111,7 +111,7 @@ services:
     container_name: moltbuddy-nginx-prod
     restart: always
     ports:
-      - "8080:80"
+      - "8083:80"
       - "8443:443"
     volumes:
       - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
