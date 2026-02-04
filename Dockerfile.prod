@@ -1,95 +1,43 @@
-FROM node:20-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
-RUN apk add --no-cache libc6-compat curl
+FROM node:20 AS builder
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
 
-# =====================
-# Dependencies Stage
-# =====================
-FROM base AS deps
+COPY package.json pnpm-lock.yaml ./
+COPY frontend/package.json ./frontend/
 
-# Copy workspace configuration files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-
-# Copy all package.json files
-COPY apps/api/package.json ./apps/api/
-COPY apps/dashboard/package.json ./apps/dashboard/
-COPY packages/eslint-config/package.json ./packages/eslint-config/
-COPY packages/permissions/package.json ./packages/permissions/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
-
-# Install all dependencies
 RUN pnpm install --frozen-lockfile
+RUN cd frontend && pnpm install --frozen-lockfile
 
-# =====================
-# Builder Stage
-# =====================
-FROM base AS builder
-WORKDIR /app
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /app/apps/dashboard/node_modules ./apps/dashboard/node_modules
-COPY --from=deps /app/packages/permissions/node_modules ./packages/permissions/node_modules
-
-# Copy source code
 COPY . .
 
-# Build shared packages
-RUN pnpm --filter @moltbuddy/permissions build || true
+RUN pnpm run build
+RUN pnpm run build:frontend
 
-# Build required applications only
-RUN pnpm --filter @moltbuddy/api build && pnpm --filter @moltbuddy/dashboard build
+FROM node:20 AS production
 
-# =====================
-# API Production Stage
-# =====================
-FROM base AS api-runner
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
+
+COPY --from=builder /app .
+
+RUN pnpm install --frozen-lockfile --prod
 
 ENV NODE_ENV=production
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 apiuser
+RUN groupadd -g 1001 nodejs && \
+    useradd -u 1001 -g nodejs -s /bin/bash nodejs
 
-# Copy built API
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/
-COPY --from=builder /app/packages/permissions/dist ./packages/permissions/dist
-COPY --from=builder /app/packages/permissions/package.json ./packages/permissions/
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-lock.yaml ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
+RUN chown -R nodejs:nodejs /app
 
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
-
-USER apiuser
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["node", "apps/api/dist/nodeIndex.js"]
-
-# =====================
-# Dashboard Production Stage
-# =====================
-FROM nginx:alpine AS dashboard-runner
-
-# Copy built dashboard
-COPY --from=builder /app/apps/dashboard/dist /usr/share/nginx/html
-
-# Copy nginx config
-COPY apps/dashboard/nginx.conf /etc/nginx/conf.d/default.conf
+USER nodejs
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider "http://localhost:${PORT:-3000}/api/health" || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "dist/index.js"]
 

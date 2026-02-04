@@ -1,34 +1,50 @@
 {
   "name": "moltbuddy",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
+    "start": "node dist/index.js",
+    "build": "tsc -b tsconfig.json --force && tsc-alias",
+    "build:frontend": "cd frontend && pnpm run build",
+    "build:all": "pnpm run build && pnpm run build:frontend",
+    "predev": "pnpm run build",
+    "dev:backend": "tsx --watch src/index.ts",
+    "dev:frontend": "cd frontend && pnpm run dev -- --host 0.0.0.0 --port 5173",
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,green \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "install:frontend": "cd frontend && pnpm install",
+    "install:all": "pnpm install && pnpm run install:frontend",
+    "format": "prettier --write .",
     "docker:dev": "docker compose up -d",
     "docker:dev:build": "docker compose up -d --build",
     "docker:dev:down": "docker compose down",
     "docker:dev:logs": "docker compose logs -f",
-    "docker:dev:logs:api": "docker compose logs -f api",
-    "docker:dev:logs:dashboard": "docker compose logs -f dashboard",
     "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
     "docker:prod:build": "docker compose -f docker-compose.prod.yml up -d --build",
     "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
     "docker:prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
     "docker:clean": "docker system prune -af && docker volume prune -f"
   },
-  "devDependencies": {
-    "prettier": "^3.6.2",
-    "turbo": "^2.5.6",
-    "typescript": "5.9.2"
-  },
-  "packageManager": "pnpm@10.0.0",
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
-    "superjson": "^2.2.2"
-  }
+    "@hono/node-server": "^1.13.3",
+    "dotenv": "^16.4.7",
+    "hono": "^4.6.14",
+    "mysql2": "^3.12.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.20",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "concurrently": "^9.1.2",
+    "prettier": "^3.6.2",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.0.0"
 }

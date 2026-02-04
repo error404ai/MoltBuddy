@@ -1,132 +1,68 @@
-# ===========================================
-# Development Docker Compose
-# Full monorepo development environment
-# ===========================================
-
 services:
-  # =====================
-  # Database Services
-  # =====================
-  mysql:
-    image: mysql:8.0
-    container_name: moltbuddy-mysql
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moltbuddy-dev
     restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:3000"
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/frontend/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - moltbuddy-network
+
+  db:
+    image: mysql:8.0
+    container_name: moltbuddy-mysql-dev
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_EXTERNAL_PORT:-3306}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-moltbuddy_db}
       MYSQL_USER: ${MYSQL_USER:-moltbuddy}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
-    ports:
-      - "${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
-    networks:
-      - moltbuddy-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MYSQL_ROOT_PASSWORD:-rootpassword}",
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - moltbuddy-network
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: moltbuddy-phpmyadmin
+    image: phpmyadmin:latest
+    container_name: moltbuddy-phpmyadmin-dev
     restart: unless-stopped
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
     ports:
       - "${PHPMYADMIN_PORT:-8080}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-moltbuddy}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-password}
+      UPLOAD_LIMIT: 100M
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
     networks:
       - moltbuddy-network
-
-  # =====================
-  # API Service
-  # =====================
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: moltbuddy-api
-    restart: unless-stopped
-    working_dir: /app
-    command: pnpm --filter @moltbuddy/api dev
-    environment:
-      NODE_ENV: development
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USERNAME: ${MYSQL_USER:-moltbuddy}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-password}
-      DB_NAME: ${MYSQL_DATABASE:-moltbuddy_db}
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-    ports:
-      - "${API_PORT:-8000}:8000"
-    volumes:
-      # Mount source code for hot reloading
-      - ./apps/api/src:/app/apps/api/src
-      - ./packages/permissions/src:/app/packages/permissions/src
-      # Exclude node_modules
-      - /app/node_modules
-      - /app/apps/api/node_modules
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - moltbuddy-network
-
-  # =====================
-  # Dashboard Service (Vite + React)
-  # =====================
-  dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: moltbuddy-dashboard
-    restart: unless-stopped
-    working_dir: /app
-    command: pnpm --filter @moltbuddy/dashboard dev --host 0.0.0.0
-    environment:
-      NODE_ENV: development
-      VITE_API_URL: http://localhost:${API_PORT:-8000}
-    ports:
-      - "${DASHBOARD_PORT:-3000}:3000"
-    volumes:
-      # Mount source code for hot reloading
-      - ./apps/dashboard/src:/app/apps/dashboard/src
-      - ./apps/dashboard/public:/app/apps/dashboard/public
-      - ./apps/dashboard/index.html:/app/apps/dashboard/index.html
-      # Exclude node_modules
-      - /app/node_modules
-      - /app/apps/dashboard/node_modules
-    depends_on:
-      - api
-    networks:
-      - moltbuddy-network
-
-  # =====================
-networks:
-  moltbuddy-network:
-    driver: bridge
 
 volumes:
   mysql_data:
+
+networks:
+  moltbuddy-network:
+    driver: bridge
