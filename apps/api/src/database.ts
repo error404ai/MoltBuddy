@@ -5,7 +5,6 @@ import { DataSource } from "typeorm";
 import { fileURLToPath } from "url";
 
 // Direct entity imports for reliable bundling in serverless environments
-import Organizations from "./entities/Organizations.js";
 import User from "./entities/User.js";
 
 // Direct migration imports for reliable bundling in serverless environments
@@ -21,7 +20,7 @@ const isTsMode = __filename.endsWith(".ts");
 console.log("Running in", isTsMode ? "TS" : "JS", "mode");
 
 // All entities - direct imports work in all environments
-const entities = [Organizations, User];
+const entities = [User];
 
 // All migrations in order - direct imports work in all environments
 // const migrations = [
