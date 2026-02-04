@@ -8,7 +8,7 @@ import "reflect-metadata";
 
 import type { IocAdapter } from "routing-controllers";
 import { useContainer, useExpressServer } from "routing-controllers";
-import Container from "typedi";
+import { Container } from "typedi";
 import { AppDataSource } from "./loaders/database";
 import Logger from "./logger/index";
 import { GlobalErrorHandler } from "./middleware/errorHandler.middleware";
