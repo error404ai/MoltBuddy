@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-error404ai}/moltbuddy:${TAG:-latest}
     container_name: moltbuddy-prod
     restart: always
     env_file: .env

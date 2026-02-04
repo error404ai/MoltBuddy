@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 3000 5173
 
 # Start the development server
-CMD ["sh", "-c", "pnpm run dev"]
+CMD ["pnpm", "run", "dev"]
