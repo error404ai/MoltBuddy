@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import express from "express";
+import fs from "node:fs";
 import http from "http";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,14 +61,26 @@ useExpressServer(app, {
 });
 
 // Serve frontend static files
-app.use(express.static(join(__dirname, "..", "public")));
+const publicDir = join(__dirname, "..", "public");
+const indexHtml = join(publicDir, "index.html");
+app.use(express.static(publicDir));
 
 // Catch-all route for SPA
 app.get("*", (req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({ message: "API endpoint not found" });
   }
-  res.sendFile(join(__dirname, "..", "public", "index.html"));
+
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
+  }
+
+  // In development, frontend is served by Vite on port 5173
+  if (process.env.NODE_ENV === "development") {
+    return res.redirect(`http://localhost:5173${req.originalUrl}`);
+  }
+
+  return res.status(404).json({ message: "Frontend not built. Run: pnpm run build:frontend" });
 });
 
 const server = http.createServer(app);
