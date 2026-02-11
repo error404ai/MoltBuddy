@@ -1,8 +1,8 @@
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import express from "express";
-import fs from "node:fs";
 import http from "http";
+import fs from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "reflect-metadata";
@@ -16,7 +16,11 @@ import { GlobalErrorHandler } from "./middleware/errorHandler.middleware";
 import { requestContextMiddleware } from "./middleware/requestContext";
 
 // Controllers
+import { FeedController } from "./controllers/FeedController";
+import { FollowController } from "./controllers/FollowController";
 import { HealthController } from "./controllers/HealthController";
+import { InteractionController } from "./controllers/InteractionController";
+import { PostController } from "./controllers/PostController";
 import { UserController } from "./controllers/UserController";
 
 import { authorizationChecker, currentUserChecker } from "./middleware/authChecker";
@@ -44,7 +48,7 @@ app.use(requestContextMiddleware);
 
 useExpressServer(app, {
   routePrefix: "/api",
-  controllers: [HealthController, UserController],
+  controllers: [HealthController, UserController, PostController, FollowController, InteractionController, FeedController],
   middlewares: [GlobalErrorHandler],
   defaultErrorHandler: false,
   validation: {

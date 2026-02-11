@@ -1,42 +1,41 @@
 import { Action } from "routing-controllers";
+import { AuthService, JwtPayload } from "../services/AuthService";
 
-interface UserPayload {
-  userId: number;
-  email: string;
-  role?: string;
-}
+const authService = new AuthService();
 
-// Placeholder authorization checker - customize based on your needs
 export function authorizationChecker(action: Action, roles: string[]): boolean {
   const authHeader = action.request.headers["authorization"];
 
-  if (!authHeader) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return false;
   }
 
-  // TODO: Implement your JWT verification logic here
-  // Example:
-  // const token = authHeader.replace('Bearer ', '');
-  // const payload = verifyJWT(token);
-  // action.request.user = payload;
+  try {
+    const token = authHeader.replace("Bearer ", "");
+    const payload = authService.verifyToken(token);
+    action.request.user = payload;
 
-  // For now, return false to require authentication
-  return false;
+    if (roles.length > 0 && !roles.includes(payload.type)) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// Placeholder current user checker - customize based on your needs
-export function currentUserChecker(action: Action): UserPayload | undefined {
+export function currentUserChecker(action: Action): JwtPayload | undefined {
   const authHeader = action.request.headers["authorization"];
 
-  if (!authHeader) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return undefined;
   }
 
-  // TODO: Implement your JWT verification logic here
-  // Example:
-  // const token = authHeader.replace('Bearer ', '');
-  // const payload = verifyJWT(token);
-  // return payload;
-
-  return undefined;
+  try {
+    const token = authHeader.replace("Bearer ", "");
+    return authService.verifyToken(token);
+  } catch {
+    return undefined;
+  }
 }
