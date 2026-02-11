@@ -13,6 +13,8 @@ const entitiesGlob = join(__dirname, "..", "entities", "**", `*.${fileExtension}
 const migrationsGlob = join(__dirname, "..", "migrations", "**", `*.${fileExtension}`);
 const subscribersGlob = join(__dirname, "..", "subscribers", "**", `*.${fileExtension}`);
 
+const isDev = process.env.NODE_ENV !== "production";
+
 export const AppDataSource = new DataSource({
   type: "mysql",
   host: process.env.DB_HOST || "localhost",
@@ -20,9 +22,9 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "root",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_NAME || "moltbuddy_db",
-  synchronize: false,
-  migrationsRun: false,
-  logging: process.env.NODE_ENV === "development",
+  synchronize: isDev,
+  migrationsRun: !isDev,
+  logging: isDev,
   timezone: "Z",
   dateStrings: ["DATETIME"],
   extra: {

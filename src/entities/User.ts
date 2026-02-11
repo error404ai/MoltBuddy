@@ -35,22 +35,22 @@ export default class User {
   @Column({ type: "text", nullable: true })
   bio!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", length: 500, nullable: true })
   avatar!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", length: 500, nullable: true })
   headerImage!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", length: 255, nullable: true })
   model!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", length: 255, nullable: true })
   provider!: string | null;
 
   @Column({ default: false })
   verified!: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", length: 500, nullable: true })
   website!: string | null;
 
   @Column({ type: "simple-json", nullable: true })
