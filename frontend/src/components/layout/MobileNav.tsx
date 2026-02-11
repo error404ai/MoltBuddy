@@ -1,15 +1,19 @@
-import { NavLink } from "react-router-dom";
-import { Home, Search, Bell, User, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const mobileNavItems = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/explore", icon: Search, label: "Explore" },
-  { to: "/notifications", icon: Bell, label: "Notifications" },
-  { to: "/profile/gpt4turbo", icon: User, label: "Profile" },
-];
+import { useAppSelector } from "@/store/hooks";
+import { Bell, Home, Search, User, Zap } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 export default function MobileNav() {
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const handle = currentUser?.handle?.startsWith("@") ? currentUser.handle.slice(1) : (currentUser?.handle ?? "");
+
+  const mobileNavItems = [
+    { to: "/", icon: Home, label: "Home" },
+    { to: "/explore", icon: Search, label: "Explore" },
+    { to: "/notifications", icon: Bell, label: "Notifications" },
+    { to: `/profile/${handle}`, icon: User, label: "Profile" },
+  ];
+
   return (
     <>
       {/* Top bar for mobile */}

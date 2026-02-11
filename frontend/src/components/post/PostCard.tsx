@@ -1,15 +1,14 @@
 import Avatar from "@/components/ui/Avatar";
 import VerifiedBadge from "@/components/ui/VerifiedBadge";
 import { cn, formatCompactNumber, getRelativeTime } from "@/lib/utils";
+import { useLikePostMutation, useUnlikePostMutation } from "@/store/api/postApi";
 import type { Post } from "@/types";
 import {
-  BarChart2,
-  Bookmark,
-  Heart,
-  MessageCircle,
-  MoreHorizontal,
-  Repeat2,
-  Share,
+    BarChart2,
+    Bookmark,
+    Heart,
+    MoreHorizontal,
+    Share,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,24 +19,29 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, showThread = false }: PostCardProps) {
-  const [liked, setLiked] = useState(post.liked);
-  const [likeCount, setLikeCount] = useState(post.likes);
-  const [reposted, setReposted] = useState(post.reposted);
-  const [repostCount, setRepostCount] = useState(post.reposts);
-  const [bookmarked, setBookmarked] = useState(post.bookmarked);
+  const [liked, setLiked] = useState(post.liked ?? false);
+  const [likeCount, setLikeCount] = useState(post.likesCount);
+  const [bookmarked, setBookmarked] = useState(false);
 
-  const handleLike = (e: React.MouseEvent) => {
+  const [likePost] = useLikePostMutation();
+  const [unlikePost] = useUnlikePostMutation();
+
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setLiked(!liked);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
-
-  const handleRepost = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setReposted(!reposted);
-    setRepostCount((prev) => (reposted ? prev - 1 : prev + 1));
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikeCount((prev) => (wasLiked ? prev - 1 : prev + 1));
+    try {
+      if (wasLiked) {
+        await unlikePost(post.id).unwrap();
+      } else {
+        await likePost(post.id).unwrap();
+      }
+    } catch {
+      setLiked(wasLiked);
+      setLikeCount((prev) => (wasLiked ? prev + 1 : prev - 1));
+    }
   };
 
   const handleBookmark = (e: React.MouseEvent) => {
@@ -46,23 +50,19 @@ export default function PostCard({ post, showThread = false }: PostCardProps) {
     setBookmarked(!bookmarked);
   };
 
+  const user = post.user;
+  const handle = user?.handle?.startsWith("@") ? user.handle.slice(1) : user?.handle;
+
   return (
     <Link
       to={`/post/${post.id}`}
       className="block border-b border-border px-4 py-3 transition-colors hover:bg-surface-hover"
     >
-      {post.replyTo && !showThread && (
-        <div className="ml-6 mb-1 flex items-center gap-1 text-xs text-gray-500">
-          <MessageCircle size={12} />
-          <span>Replying to a thread</span>
-        </div>
-      )}
-
       <div className="flex gap-3">
         {/* Avatar column */}
         <div className="flex flex-shrink-0 flex-col items-center">
-          <Link to={`/profile/${post.agent.handle.slice(1)}`} onClick={(e) => e.stopPropagation()}>
-            <Avatar src={post.agent.avatar} alt={post.agent.name} size="md" />
+          <Link to={`/profile/${handle}`} onClick={(e) => e.stopPropagation()}>
+            <Avatar src={user?.avatar ?? undefined} alt={user?.name ?? "User"} size="md" />
           </Link>
           {showThread && (
             <div className="mt-1 w-0.5 flex-1 bg-dark-tertiary" />
@@ -75,14 +75,14 @@ export default function PostCard({ post, showThread = false }: PostCardProps) {
           <div className="flex items-start justify-between gap-1">
             <div className="flex flex-wrap items-center gap-x-1 text-[15px] leading-5">
               <Link
-                to={`/profile/${post.agent.handle.slice(1)}`}
+                to={`/profile/${handle}`}
                 onClick={(e) => e.stopPropagation()}
                 className="font-bold text-text-primary hover:underline"
               >
-                {post.agent.name}
+                {user?.name}
               </Link>
-              {post.agent.verified && <VerifiedBadge size={16} className="flex-shrink-0" />}
-              <span className="text-gray-500">{post.agent.handle}</span>
+              {user?.verified && <VerifiedBadge size={16} className="flex-shrink-0" />}
+              <span className="text-gray-500">@{handle}</span>
               <span className="text-gray-500">·</span>
               <span className="flex-shrink-0 text-gray-500 hover:underline">
                 {getRelativeTime(post.createdAt)}
@@ -97,11 +97,13 @@ export default function PostCard({ post, showThread = false }: PostCardProps) {
           </div>
 
           {/* Model badge */}
-          <div className="mb-1">
-            <span className="inline-block rounded-md bg-surface-elevated px-1.5 py-0.5 text-xs text-gray-500">
-              {post.agent.model}
-            </span>
-          </div>
+          {user?.model && (
+            <div className="mb-1">
+              <span className="inline-block rounded-md bg-surface-elevated px-1.5 py-0.5 text-xs text-gray-500">
+                {user.model}
+              </span>
+            </div>
+          )}
 
           {/* Content text */}
           <div className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary break-words overflow-hidden">
@@ -134,31 +136,6 @@ export default function PostCard({ post, showThread = false }: PostCardProps) {
 
           {/* Action buttons */}
           <div className="-ml-1.5 mt-2 flex items-center justify-between">
-            {/* Reply */}
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="group flex items-center gap-1 text-gray-500 transition-colors hover:text-primary"
-            >
-              <div className="rounded-full p-2 group-hover:bg-primary/10 transition-colors">
-                <MessageCircle size={16} />
-              </div>
-              <span className="text-[13px]">{formatCompactNumber(post.replies)}</span>
-            </button>
-
-            {/* Repost */}
-            <button
-              onClick={handleRepost}
-              className={cn(
-                "group flex items-center gap-1 transition-colors",
-                reposted ? "text-accent" : "text-gray-500 hover:text-accent"
-              )}
-            >
-              <div className="rounded-full p-2 group-hover:bg-accent/10 transition-colors">
-                <Repeat2 size={16} />
-              </div>
-              <span className="text-[13px]">{formatCompactNumber(repostCount)}</span>
-            </button>
-
             {/* Like */}
             <button
               onClick={handleLike}
@@ -181,7 +158,7 @@ export default function PostCard({ post, showThread = false }: PostCardProps) {
               <div className="rounded-full p-2 group-hover:bg-primary/10 transition-colors">
                 <BarChart2 size={16} />
               </div>
-              <span className="text-[13px]">{formatCompactNumber(post.views)}</span>
+              <span className="text-[13px]">{formatCompactNumber(post.viewsCount)}</span>
             </button>
 
             {/* Share / Bookmark */}

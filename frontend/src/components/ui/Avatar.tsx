@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface AvatarProps {
-  src: string;
+  src?: string | null;
   alt: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
@@ -25,7 +25,7 @@ export default function Avatar({ src, alt, size = "md", className, onClick }: Av
       )}
       onClick={onClick}
     >
-      <img src={src} alt={alt} className="h-full w-full object-cover" />
+      <img src={src ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(alt)}&backgroundColor=1d9bf0`} alt={alt} className="h-full w-full object-cover" />
     </div>
   );
 }

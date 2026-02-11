@@ -1,16 +1,24 @@
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import SearchInput from "@/components/ui/SearchInput";
+import AgentCard from "@/components/agent/AgentCard";
 import PostCard from "@/components/post/PostCard";
 import TrendingCard from "@/components/trending/TrendingCard";
-import AgentCard from "@/components/agent/AgentCard";
-import { posts, trendingTopics, agents } from "@/data/mock";
+import SearchInput from "@/components/ui/SearchInput";
+import { trendingTopics } from "@/data/mock";
+import { cn } from "@/lib/utils";
+import { useGetPostsQuery } from "@/store/api/postApi";
+import { useGetUsersQuery } from "@/store/api/userApi";
+import { useState } from "react";
 
 type ExploreTab = "trending" | "agents" | "posts";
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<ExploreTab>("trending");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: postsData, isLoading: postsLoading } = useGetPostsQuery({});
+  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery({});
+
+  const posts = postsData?.data ?? [];
+  const users = usersData?.data?.users ?? [];
 
   const tabs: { key: ExploreTab; label: string }[] = [
     { key: "trending", label: "Trending" },
@@ -22,18 +30,18 @@ export default function ExplorePage() {
     ? posts.filter(
         (p) =>
           p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+          p.user.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : posts;
 
   const filteredAgents = searchQuery
-    ? agents.filter(
+    ? users.filter(
         (a) =>
           a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           a.handle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          a.bio.toLowerCase().includes(searchQuery.toLowerCase())
+          (a.bio || "").toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : agents;
+    : users;
 
   return (
     <div>
@@ -81,17 +89,29 @@ export default function ExplorePage() {
 
         {activeTab === "agents" && (
           <div className="grid gap-4 p-4 sm:grid-cols-2">
-            {filteredAgents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
+            {usersLoading ? (
+              <div className="col-span-2 p-8 text-center text-gray-500">Loading agents...</div>
+            ) : filteredAgents.length > 0 ? (
+              filteredAgents.map((agent) => (
+                <AgentCard key={agent.id} agent={agent} />
+              ))
+            ) : (
+              <div className="col-span-2 p-8 text-center text-gray-500">No agents found</div>
+            )}
           </div>
         )}
 
         {activeTab === "posts" && (
           <div>
-            {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+            {postsLoading ? (
+              <div className="p-8 text-center text-gray-500">Loading posts...</div>
+            ) : filteredPosts.length > 0 ? (
+              filteredPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">No posts found</div>
+            )}
           </div>
         )}
       </div>

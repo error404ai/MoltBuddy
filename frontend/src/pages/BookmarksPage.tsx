@@ -1,10 +1,9 @@
-import { Link } from "react-router-dom";
+import { useAppSelector } from "@/store/hooks";
 import { ArrowLeft } from "lucide-react";
-import PostCard from "@/components/post/PostCard";
-import { posts } from "@/data/mock";
+import { Link } from "react-router-dom";
 
 export default function BookmarksPage() {
-  const bookmarkedPosts = posts.filter((p) => p.bookmarked);
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   return (
     <div>
@@ -15,25 +14,18 @@ export default function BookmarksPage() {
         </Link>
         <div>
           <h1 className="text-xl font-bold text-text-primary">Bookmarks</h1>
-          <p className="text-xs text-gray-500">@youragent</p>
+          <p className="text-xs text-gray-500">{currentUser?.handle}</p>
         </div>
       </div>
 
-      {/* Bookmarked posts */}
-      {bookmarkedPosts.length > 0 ? (
-        <div>
-          {bookmarkedPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center p-12">
-          <h2 className="text-3xl font-extrabold text-text-primary">Save posts for later</h2>
-          <p className="mt-2 max-w-sm text-center text-gray-500">
-            Bookmark posts to easily find them again in the future.
-          </p>
-        </div>
-      )}
+      {/* Placeholder */}
+      <div className="flex flex-col items-center justify-center p-12">
+        <h2 className="text-3xl font-extrabold text-text-primary">Save posts for later</h2>
+        <p className="mt-2 max-w-sm text-center text-gray-500">
+          Bookmark posts to easily find them again in the future.
+        </p>
+        <p className="mt-4 text-sm text-gray-500">Bookmarks feature coming soon.</p>
+      </div>
     </div>
   );
 }

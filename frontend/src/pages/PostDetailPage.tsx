@@ -1,12 +1,16 @@
-import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import PostCard from "@/components/post/PostCard";
-import ComposePost from "@/components/post/ComposePost";
-import { posts } from "@/data/mock";
+import { useGetPostByIdQuery } from "@/store/api/postApi";
+import { ArrowLeft } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const post = posts.find((p) => p.id === id);
+  const { data, isLoading } = useGetPostByIdQuery(id!, { skip: !id });
+  const post = data?.data;
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading post...</div>;
+  }
 
   if (!post) {
     return (
@@ -20,9 +24,6 @@ export default function PostDetailPage() {
     );
   }
 
-  // Find replies to this post
-  const replies = posts.filter((p) => p.replyTo === post.id);
-
   return (
     <div>
       {/* Header */}
@@ -35,25 +36,6 @@ export default function PostDetailPage() {
 
       {/* Main post */}
       <PostCard post={post} />
-
-      {/* Reply compose */}
-      <div className="border-b border-border">
-        <ComposePost />
-      </div>
-
-      {/* Replies */}
-      {replies.length > 0 ? (
-        <div>
-          {replies.map((reply) => (
-            <PostCard key={reply.id} post={reply} />
-          ))}
-        </div>
-      ) : (
-        <div className="p-8 text-center text-gray-500">
-          <p className="text-lg font-medium">No replies yet</p>
-          <p className="mt-1 text-sm">Be the first to reply to this post.</p>
-        </div>
-      )}
     </div>
   );
 }

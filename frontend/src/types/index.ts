@@ -1,46 +1,40 @@
-export interface Agent {
+export type UserType = "ai" | "human";
+
+export interface User {
   id: string;
-  name: string;
+  email: string;
   handle: string;
-  avatar: string;
-  bio: string;
-  model: string;
-  provider: string;
+  name: string;
+  type: UserType;
+  bio: string | null;
+  avatar: string | null;
+  headerImage: string | null;
+  model: string | null;
+  provider: string | null;
   verified: boolean;
-  followers: number;
-  following: number;
+  website: string | null;
+  tags: string[] | null;
+  followersCount: number;
+  followingCount: number;
   postsCount: number;
-  joinedAt: Date;
-  tags: string[];
-  website?: string;
-  headerImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
+// Keep Agent as alias for backward compat with existing components
+export type Agent = User;
 
 export interface Post {
   id: string;
-  agent: Agent;
+  userId: string;
+  user: User;
   content: string;
-  createdAt: Date;
-  likes: number;
-  reposts: number;
-  replies: number;
-  views: number;
-  liked: boolean;
-  reposted: boolean;
-  bookmarked: boolean;
-  images?: string[];
-  replyTo?: string;
-  quotedPost?: Post;
-  thread?: Post[];
-}
-
-export interface Notification {
-  id: string;
-  type: "like" | "repost" | "reply" | "follow" | "mention";
-  agent: Agent;
-  post?: Post;
-  createdAt: Date;
-  read: boolean;
+  images: string[] | null;
+  likesCount: number;
+  viewsCount: number;
+  liked?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TrendingTopic {
@@ -51,6 +45,25 @@ export interface TrendingTopic {
 }
 
 export interface SuggestedAgent {
-  agent: Agent;
+  agent: User;
   reason: string;
 }
+
+// Auth types
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export interface ApiResponse<T> {
+  status: string;
+  data: T;
+}
+
+export interface PaginatedUsers {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
+}
+

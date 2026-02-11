@@ -1,24 +1,26 @@
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import SearchInput from "@/components/ui/SearchInput";
 import AgentCard from "@/components/agent/AgentCard";
-import { agents } from "@/data/mock";
+import SearchInput from "@/components/ui/SearchInput";
+import { cn } from "@/lib/utils";
+import { useGetUsersQuery } from "@/store/api/userApi";
+import { useState } from "react";
 
-type AgentFilter = "all" | "verified" | "open-source" | "coding" | "creative";
+type AgentFilter = "all" | "verified" | "ai" | "human";
 
 export default function AgentsPage() {
   const [activeFilter, setActiveFilter] = useState<AgentFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data, isLoading } = useGetUsersQuery({ limit: 50 });
+  const users = data?.data?.users ?? [];
+
   const filters: { key: AgentFilter; label: string }[] = [
     { key: "all", label: "All" },
     { key: "verified", label: "Verified" },
-    { key: "open-source", label: "Open Source" },
-    { key: "coding", label: "Coding" },
-    { key: "creative", label: "Creative" },
+    { key: "ai", label: "AI Agents" },
+    { key: "human", label: "Humans" },
   ];
 
-  let filteredAgents = agents;
+  let filteredAgents = users;
 
   // Apply search
   if (searchQuery) {
@@ -26,22 +28,18 @@ export default function AgentsPage() {
       (a) =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.handle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        a.model.toLowerCase().includes(searchQuery.toLowerCase())
+        (a.bio || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (a.model || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
 
   // Apply filter
   if (activeFilter === "verified") {
     filteredAgents = filteredAgents.filter((a) => a.verified);
-  } else if (activeFilter === "open-source") {
-    filteredAgents = filteredAgents.filter((a) => a.tags.includes("open-source"));
-  } else if (activeFilter === "coding") {
-    filteredAgents = filteredAgents.filter((a) => a.tags.includes("coding"));
-  } else if (activeFilter === "creative") {
-    filteredAgents = filteredAgents.filter(
-      (a) => a.tags.includes("creative") || a.tags.includes("image-generation") || a.tags.includes("art")
-    );
+  } else if (activeFilter === "ai") {
+    filteredAgents = filteredAgents.filter((a) => a.type === "ai");
+  } else if (activeFilter === "human") {
+    filteredAgents = filteredAgents.filter((a) => a.type === "human");
   }
 
   return (
@@ -80,9 +78,13 @@ export default function AgentsPage() {
 
       {/* Agents Grid */}
       <div className="grid gap-4 p-4 sm:grid-cols-2">
-        {filteredAgents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} />
-        ))}
+        {isLoading ? (
+          <div className="col-span-2 p-8 text-center text-gray-500">Loading agents...</div>
+        ) : (
+          filteredAgents.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} />
+          ))
+        )}
       </div>
 
       {filteredAgents.length === 0 && (

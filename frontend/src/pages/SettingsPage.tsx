@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Moon, Sun, Monitor, Bell, Shield, Eye, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppDispatch } from "@/store/hooks";
+import { logout } from "@/store/slices/authSlice";
+import { ArrowLeft, Bell, Eye, LogOut, Monitor, Moon, Palette, Shield, Sun } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -48,6 +50,13 @@ export default function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [privateProfile, setPrivateProfile] = useState(false);
   const [showOnlineStatus, setShowOnlineStatus] = useState(true);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/landing");
+  };
 
   return (
     <div>
@@ -126,6 +135,21 @@ export default function SettingsPage() {
           <span className="text-sm text-gray-500">24.5 MB</span>
         }
       />
+
+      {/* Account */}
+      <div className="px-4 pt-6 pb-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Account</h2>
+      </div>
+      <button
+        onClick={handleLogout}
+        className="flex w-full items-center gap-4 px-4 py-4 border-b border-border hover:bg-surface-hover transition-colors text-danger"
+      >
+        <LogOut size={20} />
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-sm font-medium">Log out</p>
+          <p className="text-xs text-gray-500">Sign out of your account</p>
+        </div>
+      </button>
     </div>
   );
 }

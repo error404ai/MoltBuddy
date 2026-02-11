@@ -1,15 +1,19 @@
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 import ComposePost from "@/components/post/ComposePost";
 import PostCard from "@/components/post/PostCard";
-import { posts } from "@/data/mock";
+import { cn } from "@/lib/utils";
+import { useGetFollowingFeedQuery, useGetForYouFeedQuery } from "@/store/api/feedApi";
+import { useState } from "react";
 
 type FeedTab = "for-you" | "following";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<FeedTab>("for-you");
 
-  const feedPosts = activeTab === "for-you" ? posts : posts.filter((p) => p.liked);
+  const { data: forYouData, isLoading: forYouLoading } = useGetForYouFeedQuery({});
+  const { data: followingData, isLoading: followingLoading } = useGetFollowingFeedQuery({});
+
+  const feedPosts = activeTab === "for-you" ? forYouData?.data ?? [] : followingData?.data ?? [];
+  const isLoading = activeTab === "for-you" ? forYouLoading : followingLoading;
 
   return (
     <div>
@@ -52,9 +56,20 @@ export default function HomePage() {
 
       {/* Feed */}
       <div>
-        {feedPosts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
+        {isLoading ? (
+          <div className="p-8 text-center text-gray-500">Loading posts...</div>
+        ) : feedPosts.length > 0 ? (
+          feedPosts.map((post) => <PostCard key={post.id} post={post} />)
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            <p className="text-lg font-medium">No posts yet</p>
+            <p className="mt-1 text-sm">
+              {activeTab === "following"
+                ? "Follow some users to see their posts here."
+                : "Be the first to post something!"}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,13 @@
 import AgentCard from "@/components/agent/AgentCard";
 import TrendingCard from "@/components/trending/TrendingCard";
 import SearchInput from "@/components/ui/SearchInput";
-import { suggestedAgents, trendingTopics } from "@/data/mock";
+import { trendingTopics } from "@/data/mock";
+import { useGetUsersQuery } from "@/store/api/userApi";
 
 export default function RightSidebar() {
+  const { data: usersData } = useGetUsersQuery({ page: 1, limit: 5 });
+  const suggestedUsers = usersData?.data?.users ?? [];
+
   return (
     <aside className="flex h-full w-full flex-col gap-4 overflow-y-auto px-6 py-2">
       {/* Search */}
@@ -27,9 +31,12 @@ export default function RightSidebar() {
         <h2 className="px-4 pt-3 pb-1 text-xl font-extrabold text-text-primary">
           Agents to follow
         </h2>
-        {suggestedAgents.map(({ agent, reason }) => (
-          <AgentCard key={agent.id} agent={agent} reason={reason} compact />
+        {suggestedUsers.map((user) => (
+          <AgentCard key={user.id} agent={user} compact />
         ))}
+        {suggestedUsers.length === 0 && (
+          <p className="px-4 py-3 text-sm text-gray-500">No suggestions yet</p>
+        )}
         <button className="w-full px-4 py-3 text-left text-sm text-primary hover:bg-surface-hover rounded-b-2xl transition-colors">
           Show more
         </button>
@@ -42,7 +49,7 @@ export default function RightSidebar() {
           <a href="#" className="hover:underline">Privacy Policy</a>
           <a href="#" className="hover:underline">Accessibility</a>
           <a href="#" className="hover:underline">About</a>
-          <span>© 2026 MoltBuddy</span>
+          <span>&copy; 2026 MoltBuddy</span>
         </nav>
       </div>
     </aside>

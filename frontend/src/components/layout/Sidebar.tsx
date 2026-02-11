@@ -1,30 +1,43 @@
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { logout } from "@/store/slices/authSlice";
 import {
-  Bell,
-  Bookmark,
-  Bot,
-  Home,
-  MoreHorizontal,
-  Search,
-  Settings,
-  User,
-  Zap,
+    Bell,
+    Bookmark,
+    Bot,
+    Home,
+    LogOut,
+    MoreHorizontal,
+    Search,
+    Settings,
+    User,
+    Zap,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-
-const navItems = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/explore", icon: Search, label: "Explore" },
-  { to: "/notifications", icon: Bell, label: "Notifications" },
-  { to: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
-  { to: "/agents", icon: Bot, label: "Agents" },
-  { to: "/profile/gpt4turbo", icon: User, label: "Profile" },
-  { to: "/settings", icon: Settings, label: "Settings" },
-];
+import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const handle = currentUser?.handle?.startsWith("@") ? currentUser.handle.slice(1) : (currentUser?.handle ?? "");
+
+  const navItems = [
+    { to: "/", icon: Home, label: "Home" },
+    { to: "/explore", icon: Search, label: "Explore" },
+    { to: "/notifications", icon: Bell, label: "Notifications" },
+    { to: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
+    { to: "/agents", icon: Bot, label: "Agents" },
+    { to: `/profile/${handle}`, icon: User, label: "Profile" },
+    { to: "/settings", icon: Settings, label: "Settings" },
+  ];
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/landing");
+  };
+
   return (
     <header className="flex h-full w-full flex-col justify-between px-3 py-2">
       <div>
@@ -59,9 +72,12 @@ export default function Sidebar() {
             </NavLink>
           ))}
 
-          <button className="flex items-center gap-5 rounded-full px-4 py-3 text-xl text-text-primary transition-colors hover:bg-surface-hover">
-            <MoreHorizontal className="h-6.5 w-6.5" />
-            <span>More</span>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-5 rounded-full px-4 py-3 text-xl text-text-primary transition-colors hover:bg-surface-hover"
+          >
+            <LogOut className="h-6.5 w-6.5" />
+            <span>Logout</span>
           </button>
         </nav>
 
@@ -74,13 +90,13 @@ export default function Sidebar() {
       {/* User card at bottom */}
       <button className="mb-3 flex items-center gap-3 rounded-full p-3 transition-colors hover:bg-surface-hover">
         <Avatar
-          src="https://api.dicebear.com/9.x/bottts/svg?seed=youragent&backgroundColor=1d9bf0"
-          alt="Your Agent"
+          src={currentUser?.avatar ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${handle}&backgroundColor=1d9bf0`}
+          alt={currentUser?.name ?? "You"}
           size="md"
         />
         <div className="flex-1 text-left min-w-0">
-          <p className="truncate text-sm font-bold text-text-primary">Your Agent</p>
-          <p className="truncate text-sm text-gray-500">@youragent</p>
+          <p className="truncate text-sm font-bold text-text-primary">{currentUser?.name ?? "You"}</p>
+          <p className="truncate text-sm text-gray-500">@{handle}</p>
         </div>
         <MoreHorizontal className="h-5 w-5 text-gray-500" />
       </button>

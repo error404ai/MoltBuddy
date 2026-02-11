@@ -1,43 +1,11 @@
-import Avatar from "@/components/ui/Avatar";
-import VerifiedBadge from "@/components/ui/VerifiedBadge";
-import { notifications } from "@/data/mock";
-import { cn, getRelativeTime } from "@/lib/utils";
-import type { Notification } from "@/types";
-import {
-  AtSign,
-  Heart,
-  MessageCircle,
-  Repeat2,
-  UserPlus,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Bell } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-
-const notificationIcons: Record<Notification["type"], { icon: typeof Heart; color: string }> = {
-  like: { icon: Heart, color: "text-danger" },
-  repost: { icon: Repeat2, color: "text-accent" },
-  reply: { icon: MessageCircle, color: "text-primary" },
-  follow: { icon: UserPlus, color: "text-primary" },
-  mention: { icon: AtSign, color: "text-secondary" },
-};
-
-const notificationText: Record<Notification["type"], string> = {
-  like: "liked your post",
-  repost: "reposted your post",
-  reply: "replied to your post",
-  follow: "followed you",
-  mention: "mentioned you",
-};
 
 type FilterTab = "all" | "mentions";
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
-
-  const filteredNotifications =
-    activeTab === "mentions"
-      ? notifications.filter((n) => n.type === "mention")
-      : notifications;
 
   return (
     <div>
@@ -65,61 +33,14 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* Notifications list */}
-      <div>
-        {filteredNotifications.map((notification) => {
-          const { icon: Icon, color } = notificationIcons[notification.type];
-          return (
-            <div
-              key={notification.id}
-              className={cn(
-                "flex gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-surface-hover",
-                !notification.read && "bg-primary/5"
-              )}
-            >
-              {/* Icon column */}
-              <div className="flex w-8 flex-shrink-0 justify-end pt-0.5">
-                <div className={cn(color)}>
-                  <Icon size={18} className={notification.type === "like" ? "fill-current" : ""} />
-                </div>
-              </div>
-
-              {/* Content column */}
-              <div className="min-w-0 flex-1">
-                <Link
-                  to={`/profile/${notification.agent.handle.slice(1)}`}
-                  className="inline-block"
-                >
-                  <Avatar src={notification.agent.avatar} alt={notification.agent.name} size="sm" />
-                </Link>
-                <div className="mt-2">
-                  <p className="text-[15px] leading-5 text-text-primary">
-                    <Link
-                      to={`/profile/${notification.agent.handle.slice(1)}`}
-                      className="font-bold hover:underline"
-                    >
-                      {notification.agent.name}
-                    </Link>
-                    {notification.agent.verified && <VerifiedBadge size={14} className="ml-0.5 align-middle" />}
-                    <span className="text-gray-500">
-                      {" "}{notificationText[notification.type]}
-                    </span>
-                    <span className="ml-1 text-[13px] text-gray-500">
-                      · {getRelativeTime(notification.createdAt)}
-                    </span>
-                  </p>
-                </div>
-                {notification.post && (
-                  <Link to={`/post/${notification.post.id}`} className="mt-1 block">
-                    <p className="line-clamp-2 text-[15px] leading-5 text-gray-500">
-                      {notification.post.content}
-                    </p>
-                  </Link>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      {/* Placeholder */}
+      <div className="flex flex-col items-center justify-center p-12">
+        <Bell className="h-12 w-12 text-gray-500 mb-4" />
+        <h2 className="text-2xl font-extrabold text-text-primary">Nothing to see here — yet</h2>
+        <p className="mt-2 max-w-sm text-center text-gray-500">
+          When someone interacts with your posts, you'll see it here.
+        </p>
+        <p className="mt-4 text-sm text-gray-500">Notifications feature coming soon.</p>
       </div>
     </div>
   );

@@ -1,21 +1,35 @@
-import { useState } from "react";
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
-import { Image, Smile, BarChart2, MapPin, CalendarClock } from "lucide-react";
+import { useCreatePostMutation } from "@/store/api/postApi";
+import { useAppSelector } from "@/store/hooks";
+import { BarChart2, CalendarClock, Image, MapPin, Smile } from "lucide-react";
+import { useState } from "react";
 
 export default function ComposePost() {
   const [content, setContent] = useState("");
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const [createPost, { isLoading }] = useCreatePostMutation();
 
   const maxLength = 500;
   const remaining = maxLength - content.length;
+
+  const handleSubmit = async () => {
+    if (!content.trim() || remaining < 0 || isLoading) return;
+    try {
+      await createPost({ content: content.trim() }).unwrap();
+      setContent("");
+    } catch {
+      // Error handled by RTK Query
+    }
+  };
 
   return (
     <div className="border-b border-border px-4 py-3">
       <div className="flex gap-3">
         <div className="flex-shrink-0">
           <Avatar
-            src="https://api.dicebear.com/9.x/bottts/svg?seed=youragent&backgroundColor=1d9bf0"
-            alt="Your Agent"
+            src={currentUser?.avatar ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${currentUser?.handle ?? "user"}&backgroundColor=1d9bf0`}
+            alt={currentUser?.name ?? "You"}
             size="md"
           />
         </div>
@@ -69,10 +83,11 @@ export default function ComposePost() {
               <Button
                 variant="primary"
                 size="sm"
-                disabled={content.trim().length === 0 || remaining < 0}
+                disabled={content.trim().length === 0 || remaining < 0 || isLoading}
                 className="px-5"
+                onClick={handleSubmit}
               >
-                Post
+                {isLoading ? "Posting..." : "Post"}
               </Button>
             </div>
           </div>
